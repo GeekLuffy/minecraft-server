@@ -3,6 +3,10 @@ bedrock:
   port: 19132  # Default Bedrock port
   motd1: "Minecraft Server"
   motd2: "Running GeyserMC for Bedrock players!"
+  clone-remote-port: false
+  enable-proxy-protocol: false
+  proxy-protocol-whitelisted-ips: []
+  use-tcp: true  # Enable TCP instead of UDP
 
 remote:
   address: 127.0.0.1  # Connects Geyser to your Java server
