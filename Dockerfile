@@ -4,7 +4,12 @@ RUN apt update && apt install -y openjdk-17-jdk curl unzip
 
 WORKDIR /minecraft
 
-RUN curl -o paper.jar https://api.papermc.io/v2/projects/paper/versions/1.20.4/builds/latest/downloads/paper-1.20.4.jar
+ENV PAPER_VERSION=1.21.4
+
+RUN curl -L -o paper.jar "https://api.papermc.io/v2/projects/paper/versions/$PAPER_VERSION/builds/222/downloads/paper-$PAPER_VERSION-222.jar"
+
+RUN ls -lh paper.jar && file paper.jar
+
 
 COPY server.properties . 
 COPY eula.txt . 
