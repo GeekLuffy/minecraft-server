@@ -1,0 +1,12 @@
+bedrock:
+  address: 0.0.0.0
+  port: 19132  # Default Bedrock port
+  motd1: "Minecraft Server"
+  motd2: "Running GeyserMC for Bedrock players!"
+
+remote:
+  address: 127.0.0.1  # Connects Geyser to your Java server
+  port: 25565
+  auth-type: "floodgate"  # Allows Bedrock players to join without Mojang login
+
+floodgate-key-file: "plugins/floodgate/key.pem"
