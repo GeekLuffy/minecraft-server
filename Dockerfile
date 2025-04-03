@@ -7,7 +7,6 @@ RUN apt-get update && apt-get install -y wget && \
 
 RUN ls -lah paper.jar
 
-COPY paper.jar .
 COPY entrypoint.sh /entrypoint.sh
 COPY eula.txt .
 COPY server.properties .
