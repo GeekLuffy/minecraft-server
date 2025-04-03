@@ -1,0 +1,4 @@
+username-prefix: "."  # Prevents duplicate usernames
+split-authentication: true
+proxies:
+  - "geyser"
