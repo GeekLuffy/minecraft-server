@@ -1,3 +1,3 @@
 #!/bin/sh
 echo "Starting Minecraft Server..."
-java -Xms2G -Xmx4G -jar paper.jar nogui
+java -Xms4G -Xmx7G -XX:+UseG1GC -XX:+ParallelRefProcEnabled -jar paper.jar nogui
