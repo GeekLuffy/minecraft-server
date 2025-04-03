@@ -1,22 +1,23 @@
-FROM eclipse-temurin:21-jdk
+FROM ubuntu:22.04
 
 WORKDIR /server
 
-# Install required packages including unzip for ngrok
-RUN apt-get update && apt-get install -y wget && \
-    wget -O paper.jar https://api.papermc.io/v2/projects/paper/versions/1.21.4/builds/222/downloads/paper-1.21.4-222.jar
+# Install required packages
+RUN apt-get update && apt-get install -y wget unzip curl libcurl4 libssl3 && \
+    rm -rf /var/lib/apt/lists/*
 
+# Download and set up Bedrock server
+RUN wget -O bedrock-server.zip https://minecraft.azureedge.net/bin-linux/bedrock-server-1.21.71.01.zip && \
+    unzip bedrock-server.zip && \
+    rm bedrock-server.zip && \
+    chmod +x bedrock_server
 
-RUN ls -lah paper.jar
-
-COPY entrypoint.sh /entrypoint.sh
-COPY eula.txt .
+# Copy config files
 COPY server.properties .
-COPY plugins/ ./plugins/
-COPY config/ ./config/
+COPY entrypoint.sh /entrypoint.sh
 
-EXPOSE 25565  # Java Edition
-EXPOSE 19132  # Bedrock Edition (TCP now, not UDP)
+EXPOSE 19132/tcp
+EXPOSE 19132/udp
 
 RUN chmod +x /entrypoint.sh
 
