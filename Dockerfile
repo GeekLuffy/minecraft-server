@@ -1,24 +1,16 @@
-FROM ubuntu:22.04
+FROM itzg/minecraft-bedrock-server:latest
 
-WORKDIR /server
+# Copy custom config files
+COPY server.properties /data/server.properties
 
-# Install required packages
-RUN apt-get update && apt-get install -y wget unzip curl libcurl4 libssl3 && \
-    rm -rf /var/lib/apt/lists/*
-
-# Download and set up Bedrock server
-RUN wget -O bedrock-server.zip https://minecraft.azureedge.net/bin-linux/bedrock-server-1.21.71.01.zip && \
-    unzip bedrock-server.zip && \
-    rm bedrock-server.zip && \
-    chmod +x bedrock_server
-
-# Copy config files
-COPY server.properties .
-COPY entrypoint.sh /entrypoint.sh
-
+# Expose ports
 EXPOSE 19132/tcp
 EXPOSE 19132/udp
 
-RUN chmod +x /entrypoint.sh
-
-ENTRYPOINT ["/entrypoint.sh"]
+# Environment variables for server configuration
+ENV EULA=TRUE
+ENV GAMEMODE=survival
+ENV DIFFICULTY=normal
+ENV LEVEL_NAME=Bedrock
+ENV SERVER_NAME="My Bedrock Server"
+ENV MAX_PLAYERS=10
