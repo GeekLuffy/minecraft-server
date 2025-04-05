@@ -22,7 +22,7 @@ if [ ! -f "$SERVER_DIR/bedrock_server" ]; then
     # Check for zip file
     if [ -f "/app/bedrock-server-1.21.71.zip" ]; then
         echo "Found local copy of bedrock-server-1.21.71.zip, using it..."
-        cp /app/bedrock-server-1.21.71.01.zip ./bedrock-server.zip
+        cp /app/bedrock-server-1.21.71.zip ./bedrock-server.zip
         download_success=true
         echo "Local zip copy used successfully!"
     else
