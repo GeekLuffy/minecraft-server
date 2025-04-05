@@ -1,0 +1,1 @@
+web: /opt/bedrock/bedrock_server 

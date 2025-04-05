@@ -5,6 +5,8 @@ COPY server.properties /data/server.properties
 
 # Expose HTTP port
 EXPOSE 19132
+# Expose port for Heroku
+EXPOSE 8080
 
 # Environment variables for server configuration
 ENV EULA=TRUE
@@ -14,3 +16,5 @@ ENV LEVEL_NAME=Bedrock
 ENV SERVER_NAME="My Bedrock Server"
 ENV MAX_PLAYERS=10
 ENV SERVER_PORT=19132
+# Use PORT if provided by Heroku
+ENV USE_PORT_ENV=true
