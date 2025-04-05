@@ -27,11 +27,12 @@ ENV SERVER_NAME="My Bedrock Server"
 ENV MAX_PLAYERS=10
 ENV SERVER_PORT=19132
 
-# Expose web port for Python app
-EXPOSE $PORT
+# Expose Minecraft port (both TCP and UDP)
+EXPOSE 19132/tcp
+EXPOSE 19132/udp
 
-# Expose Minecraft port
-EXPOSE 19132
+# Expose web port for Python app (dynamic from Heroku)
+EXPOSE 8080
 
 # Command to run when the container starts
-CMD ["gunicorn", "--bind", "0.0.0.0:$PORT", "app:app"]
+CMD gunicorn --bind 0.0.0.0:$PORT app:app

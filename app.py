@@ -2,7 +2,7 @@ import os
 import subprocess
 import threading
 import time
-from flask import Flask, render_template_string
+from flask import Flask, render_template_string, request
 
 app = Flask(__name__)
 
@@ -87,10 +87,8 @@ def index():
     </body>
     </html>
     """
-    # Get the server address from Heroku environment variables or use localhost
-    server_address = os.environ.get('HEROKU_APP_NAME', 'localhost')
-    if server_address != 'localhost':
-        server_address += '.herokuapp.com'
+    # Get the server address from request URL
+    server_address = request.host.split(':')[0]
     
     return render_template_string(html, server_address=server_address)
 
