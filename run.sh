@@ -120,33 +120,16 @@ if [ -f "/app/server.properties" ] && [ ! -f "$SERVER_DIR/server.properties" ]; 
     cp /app/server.properties "$SERVER_DIR/server.properties"
 fi
 
-# The restore functionality is now handled by the Flask app's /restore endpoint
-# MongoDB connection and world restoration is managed by the Python code
-
-# Start Minecraft server in background
-echo "Starting Minecraft server in background..."
-cd "$SERVER_DIR"
-
-# Final check if bedrock_server exists
-if [ ! -f "./bedrock_server" ]; then
-    echo "ERROR: bedrock_server not found, creating dummy..."
-    echo "#!/bin/bash" > bedrock_server
-    echo "echo 'This is a dummy server. Real server executable not found.'" >> bedrock_server
-    echo "echo 'Please check the logs for details.'" >> bedrock_server
-    echo "while true; do sleep 60; done" >> bedrock_server
-    chmod +x bedrock_server
-fi
-
 # Make sure permissions are set correctly
 chmod 755 bedrock_server
 ls -la bedrock_server
 
-# Start server through the shell to avoid permission issues
-nohup bash -c "./bedrock_server > minecraft.log 2>&1" &
-server_pid=$!
-echo "Minecraft server process started with PID $server_pid"
+# Heroku doesn't allow direct UDP 19132 connections, so inform the user
+echo "NOTE: Heroku doesn't allow direct connections on UDP ports."
+echo "The Minecraft server will start, but external connections won't work."
+echo "Consider using a proxy service like PlayIt.gg or ngrok to expose the server."
 
-# Start the Flask web server
-echo "Starting web server on port $PORT..."
-cd /app
-exec gunicorn --bind 0.0.0.0:$PORT app:app 
+# Start server through the shell to avoid permission issues
+echo "Starting Minecraft server..."
+cd "$SERVER_DIR"
+exec ./bedrock_server 

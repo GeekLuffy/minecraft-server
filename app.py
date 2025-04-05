@@ -7,6 +7,8 @@ import zipfile
 import datetime
 import base64
 import io
+import requests
+import json
 from bson import Binary
 from pymongo import MongoClient
 from flask import Flask, render_template_string, request, redirect, url_for, send_file
@@ -17,6 +19,9 @@ app = Flask(__name__)
 SERVER_DIR = "/tmp/bedrock"
 WORLDS_DIR = f"{SERVER_DIR}/worlds"
 BACKUP_DIR = "/tmp/backups"
+
+# Global variable to store ngrok tunnel info
+ngrok_tunnel_url = None
 
 # MongoDB setup
 def get_mongodb_client():
@@ -39,15 +44,32 @@ def start_minecraft_server():
     
     if not os.path.exists(server_path):
         print(f"ERROR: Could not find bedrock_server executable at {server_path}!")
-        return
-        
+        # Try to set up the server by running run.sh
+        try:
+            print("Attempting to set up the server using run.sh...")
+            setup_process = subprocess.run(["bash", "/app/run.sh"], 
+                                         shell=False,
+                                         stdout=subprocess.PIPE,
+                                         stderr=subprocess.STDOUT,
+                                         text=True,
+                                         check=False)
+            if setup_process.returncode != 0:
+                print(f"Server setup failed with return code: {setup_process.returncode}")
+                print(f"Setup output: {setup_process.stdout}")
+                return
+            else:
+                print("Server setup completed successfully")
+        except Exception as e:
+            print(f"Failed to run setup script: {e}")
+            return
+    
     print(f"Found Minecraft server at: {server_path}")
     
-    # Start the server
+    # Setup complete, now start the server
     print("Starting Minecraft Bedrock server...")
     try:
         # Use shell=True to bypass permission issues
-        process = subprocess.Popen(f"cd {SERVER_DIR} && ./bedrock_server", 
+        process = subprocess.Popen(f"cd {SERVER_DIR} && LD_LIBRARY_PATH={SERVER_DIR} ./bedrock_server", 
                                   shell=True,
                                   stdout=subprocess.PIPE,
                                   stderr=subprocess.STDOUT,
@@ -68,7 +90,7 @@ def start_minecraft_server():
         # Try alternative approach with bash -c
         try:
             print("Trying alternative approach with bash...")
-            process = subprocess.Popen(["bash", "-c", f"cd {SERVER_DIR} && ./bedrock_server"],
+            process = subprocess.Popen(["bash", "-c", f"cd {SERVER_DIR} && LD_LIBRARY_PATH={SERVER_DIR} ./bedrock_server"],
                                       stdout=subprocess.PIPE,
                                       stderr=subprocess.STDOUT,
                                       universal_newlines=True)
@@ -304,8 +326,17 @@ def index():
             <h2>Server Status: {{ "Running" if server_running else "Not Running" }}</h2>
             {% if server_running and not is_dummy %}
             <p>Server is running on port 19132</p>
-            <p>Connect using the server address:</p>
-            <code>{{ server_address }}</code>
+            <div class="error">
+                <h3>⚠️ Important: Heroku Port Limitation</h3>
+                <p>Heroku doesn't allow direct connections to UDP port 19132, which Minecraft Bedrock uses.</p>
+                <p>To connect to your server, you'll need to use a tunneling service like:</p>
+                <ul style="text-align: left">
+                    <li><a href="https://playit.gg/" target="_blank">PlayIt.gg</a> - Free tunneling service for game servers</li>
+                    <li><a href="https://ngrok.com/" target="_blank">ngrok</a> - Tunneling service with free tier</li>
+                    <li><a href="https://docs.microsoft.com/en-us/gaming/playfab/" target="_blank">PlayFab</a> - Microsoft's game server service</li>
+                </ul>
+                <p>Follow the documentation for these services to expose your Minecraft server running on port 19132.</p>
+            </div>
             {% elif server_running and is_dummy %}
             <p class="warning">Running in DUMMY mode. The server couldn't be downloaded.</p>
             <p>You can try to:</p>
