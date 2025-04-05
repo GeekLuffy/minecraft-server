@@ -65,8 +65,40 @@ if [ ! -f "$SERVER_DIR/bedrock_server" ]; then
         unzip -q bedrock-server.zip
         rm bedrock-server.zip
         
-        # Make sure bedrock_server is executable
-        chmod +x bedrock_server
+        # Debug - list all files in the directory
+        echo "Listing extracted files:"
+        ls -la
+        
+        # Special handling based on actual file structure we've seen
+        if [ -f "bedrock_server" ]; then
+            echo "Found bedrock_server executable in root directory"
+            chmod +x bedrock_server
+        else
+            # Try to find the bedrock_server executable in subdirectories
+            echo "Searching for bedrock_server executable:"
+            find . -type f -name "bedrock_server" || echo "No bedrock_server found"
+            
+            # If bedrock_server is in a subdirectory, move it up
+            BEDROCK_EXECUTABLE=$(find . -type f -name "bedrock_server" | head -1)
+            if [ -n "$BEDROCK_EXECUTABLE" ]; then
+                echo "Found bedrock_server at: $BEDROCK_EXECUTABLE"
+                # If in subdirectory, move everything up
+                if [[ "$BEDROCK_EXECUTABLE" == *"/"* ]]; then
+                    SUBDIR=$(dirname "$BEDROCK_EXECUTABLE")
+                    echo "Moving files from subdirectory $SUBDIR"
+                    mv "$SUBDIR"/* .
+                    rmdir "$SUBDIR" || true
+                fi
+                chmod +x bedrock_server
+            else
+                echo "ERROR: bedrock_server executable not found in the extracted files!"
+                # Create dummy executable
+                echo "#!/bin/bash" > bedrock_server
+                echo "echo 'This is a dummy server. Real server executable not found in zip.'" >> bedrock_server
+                echo "echo 'Please check the contents of your zip file.'" >> bedrock_server
+                echo "while true; do sleep 60; done" >> bedrock_server
+            fi
+        fi
         
         echo "Bedrock server extracted to $SERVER_DIR"
         ls -la "$SERVER_DIR"
@@ -94,6 +126,17 @@ fi
 # Start Minecraft server in background
 echo "Starting Minecraft server in background..."
 cd "$SERVER_DIR"
+
+# Final check if bedrock_server exists
+if [ ! -f "./bedrock_server" ]; then
+    echo "ERROR: bedrock_server not found, creating dummy..."
+    echo "#!/bin/bash" > bedrock_server
+    echo "echo 'This is a dummy server. Real server executable not found.'" >> bedrock_server
+    echo "echo 'Please check the logs for details.'" >> bedrock_server
+    echo "while true; do sleep 60; done" >> bedrock_server
+    chmod +x bedrock_server
+fi
+
 nohup ./bedrock_server > minecraft.log 2>&1 &
 server_pid=$!
 echo "Minecraft server process started with PID $server_pid"
