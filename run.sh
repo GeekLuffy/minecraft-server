@@ -16,47 +16,54 @@ if [ ! -f "$SERVER_DIR/bedrock_server" ]; then
     mkdir -p "$SERVER_DIR"
     cd "$SERVER_DIR"
     
-    # Try multiple URLs and retry a few times with increasing delays
+    # Define direct URLs to different versions (most recent first)
+    DIRECT_URLS=(
+        "https://minecraft.azureedge.net/bin-linux/bedrock-server-1.20.62.02.zip"
+        "https://raw.githubusercontent.com/MCBEBackup/MinecraftBedrockServer/main/1.20.62.02.zip"
+        "https://dl.devfee.org/minecraft/server/bedrock-server-1.20.62.02.zip"
+        "https://download.mcbedrock.com/bedrock-server-1.20.62.02.zip"
+    )
+    
+    # Try each URL in sequence
     download_success=false
-    for attempt in {1..3}; do
-        echo "Download attempt $attempt..."
-        
-        # Try primary URL
-        if wget -q -O bedrock-server.zip https://minecraft.azureedge.net/bin-linux/bedrock-server-1.20.62.02.zip; then
+    for url in "${DIRECT_URLS[@]}"; do
+        echo "Trying download from: $url"
+        if curl -L --fail -s -o bedrock-server.zip "$url"; then
             download_success=true
+            echo "Download successful!"
             break
+        else
+            echo "Failed to download from $url"
         fi
-        
-        # Try backup URL
-        if wget -q -O bedrock-server.zip https://download.mcbedrock.com/bedrock-server-1.20.62.02.zip; then
-            download_success=true
-            break
-        fi
-        
-        # Try additional backup URL
-        if wget -q -O bedrock-server.zip https://github.com/LeoZhou1234/MCBedrockServerStorage/releases/download/1.20.62/bedrock-server-1.20.62.02.zip; then
-            download_success=true
-            break
-        fi
-        
-        echo "Download attempt $attempt failed. Waiting before retry..."
-        sleep $((attempt * 5))
     done
     
+    # If all direct links fail, try creating a basic server
+    if [ "$download_success" = false ]; then
+        echo "All download attempts failed. Trying to download an older version..."
+        # Try a last resort - an older version from a different source
+        if curl -L --fail -s -o bedrock-server.zip "https://cdn.discordapp.com/attachments/1094003845623676929/1175146085115682997/bedrock-server-1.20.51.02.zip"; then
+            download_success=true
+            echo "Downloaded older version successfully!"
+        else
+            echo "All download attempts failed, creating dummy server."
+        fi
+    fi
+    
     if [ "$download_success" = true ]; then
-        echo "Download successful. Extracting..."
+        echo "Extracting downloaded server..."
         unzip -q bedrock-server.zip
         rm bedrock-server.zip
         chmod +x bedrock_server
         
-        echo "Bedrock server downloaded and extracted to $SERVER_DIR"
+        echo "Bedrock server extracted to $SERVER_DIR"
         ls -la "$SERVER_DIR"
     else
         echo "ERROR: All download attempts failed."
-        echo "Creating an empty server file for testing..."
+        echo "Creating a dummy server file for testing..."
         # Create a dummy file so the server thinks it exists
         echo "#!/bin/bash" > bedrock_server
         echo "echo 'This is a dummy server for testing. Real server download failed.'" >> bedrock_server
+        echo "echo 'Please check logs for download errors.'" >> bedrock_server
         echo "while true; do sleep 60; done" >> bedrock_server
         chmod +x bedrock_server
     fi
@@ -75,7 +82,8 @@ fi
 echo "Starting Minecraft server in background..."
 cd "$SERVER_DIR"
 nohup ./bedrock_server > minecraft.log 2>&1 &
-echo "Minecraft server process started with PID $!"
+server_pid=$!
+echo "Minecraft server process started with PID $server_pid"
 
 # Start the Flask web server
 echo "Starting web server on port $PORT..."

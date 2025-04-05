@@ -184,6 +184,14 @@ def index():
     # Check if server is running
     server_running = os.path.exists(f"{SERVER_DIR}/bedrock_server")
     
+    # Check if real server or dummy server
+    is_dummy = False
+    if server_running:
+        with open(f"{SERVER_DIR}/bedrock_server", 'r') as f:
+            content = f.read()
+            if "dummy server" in content:
+                is_dummy = True
+    
     # Check if worlds directory exists and get world names
     worlds = []
     if os.path.exists(WORLDS_DIR):
@@ -214,6 +222,13 @@ def index():
             .backup {
                 padding: 20px;
                 background-color: #e3f2fd;
+                border-radius: 10px;
+                margin: 20px 0;
+                text-align: left;
+            }
+            .error {
+                padding: 20px;
+                background-color: #ffebee;
                 border-radius: 10px;
                 margin: 20px 0;
                 text-align: left;
@@ -269,10 +284,28 @@ def index():
         <h1>Minecraft Bedrock Server</h1>
         <div class="status">
             <h2>Server Status: {{ "Running" if server_running else "Not Running" }}</h2>
-            {% if server_running %}
+            {% if server_running and not is_dummy %}
             <p>Server is running on port 19132</p>
             <p>Connect using the server address:</p>
             <code>{{ server_address }}</code>
+            {% elif server_running and is_dummy %}
+            <p class="warning">Running in DUMMY mode. The server couldn't be downloaded.</p>
+            <p>You can try to:</p>
+            <ol style="text-align: left; display: inline-block;">
+                <li>Wait a few minutes and refresh this page</li>
+                <li>Restart the app from Heroku dashboard</li>
+                <li>Manually download the server file (see below)</li>
+            </ol>
+            <div class="error">
+                <h3>Manual Server Download</h3>
+                <p>If automatic download keeps failing, try these steps:</p>
+                <ol>
+                    <li>Download the Bedrock server ZIP from <a href="https://www.minecraft.net/en-us/download/server/bedrock" target="_blank">official Minecraft site</a> or a mirror</li>
+                    <li>Extract it locally</li>
+                    <li>Compress the server files into a ZIP named "bedrock-server.zip"</li>
+                    <li>Upload it to /tmp/bedrock/ directory on this Heroku app (contact support if needed)</li>
+                </ol>
+            </div>
             {% else %}
             <p class="warning">Server is not running. Please check the logs.</p>
             {% endif %}
@@ -336,6 +369,7 @@ def index():
     return render_template_string(html, 
                                   server_address=server_address,
                                   server_running=server_running,
+                                  is_dummy=is_dummy,
                                   worlds=worlds,
                                   backups=backups)
 
