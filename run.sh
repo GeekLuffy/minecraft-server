@@ -3,11 +3,18 @@ set -e
 
 echo "Starting Minecraft Bedrock server setup..."
 
+# Change to use /tmp directory which is writable on Heroku
+SERVER_DIR="/tmp/bedrock"
+BACKUP_DIR="/tmp/backups"
+
+# Create backup directory
+mkdir -p "$BACKUP_DIR"
+
 # Download the server if it doesn't exist
-if [ ! -f /opt/bedrock/bedrock_server ]; then
+if [ ! -f "$SERVER_DIR/bedrock_server" ]; then
     echo "Bedrock server not found, downloading..."
-    mkdir -p /opt/bedrock
-    cd /opt/bedrock
+    mkdir -p "$SERVER_DIR"
+    cd "$SERVER_DIR"
     
     # Try multiple URLs and retry a few times with increasing delays
     download_success=false
@@ -42,8 +49,8 @@ if [ ! -f /opt/bedrock/bedrock_server ]; then
         rm bedrock-server.zip
         chmod +x bedrock_server
         
-        echo "Bedrock server downloaded and extracted to /opt/bedrock"
-        ls -la /opt/bedrock
+        echo "Bedrock server downloaded and extracted to $SERVER_DIR"
+        ls -la "$SERVER_DIR"
     else
         echo "ERROR: All download attempts failed."
         echo "Creating an empty server file for testing..."
@@ -54,6 +61,21 @@ if [ ! -f /opt/bedrock/bedrock_server ]; then
         chmod +x bedrock_server
     fi
 fi
+
+# Copy server.properties if it exists in the app directory
+if [ -f "/app/server.properties" ] && [ ! -f "$SERVER_DIR/server.properties" ]; then
+    echo "Copying server.properties to $SERVER_DIR"
+    cp /app/server.properties "$SERVER_DIR/server.properties"
+fi
+
+# The restore functionality is now handled by the Flask app's /restore endpoint
+# MongoDB connection and world restoration is managed by the Python code
+
+# Start Minecraft server in background
+echo "Starting Minecraft server in background..."
+cd "$SERVER_DIR"
+nohup ./bedrock_server > minecraft.log 2>&1 &
+echo "Minecraft server process started with PID $!"
 
 # Start the Flask web server
 echo "Starting web server on port $PORT..."
