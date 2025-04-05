@@ -18,6 +18,7 @@ if [ ! -f "$SERVER_DIR/bedrock_server" ]; then
     
     # Define direct URLs to different versions (most recent first)
     DIRECT_URLS=(
+        "https://www.minecraft.net/bedrockdedicatedserver/bin-linux/bedrock-server-1.21.71.01.zip"
         "https://minecraft.azureedge.net/bin-linux/bedrock-server-1.20.62.02.zip"
         "https://raw.githubusercontent.com/MCBEBackup/MinecraftBedrockServer/main/1.20.62.02.zip"
         "https://dl.devfee.org/minecraft/server/bedrock-server-1.20.62.02.zip"
