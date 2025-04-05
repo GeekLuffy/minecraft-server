@@ -16,27 +16,11 @@ if [ ! -f "$SERVER_DIR/bedrock_server" ]; then
     mkdir -p "$SERVER_DIR"
     cd "$SERVER_DIR"
     
-    # Check for local copy first (both zip and 7z formats)
+    # Check for local copy first (zip format only)
     download_success=false
     
-    # Check for 7z archive
-    if [ -f "/app/bedrock-server-1.21.71.01.7z" ]; then
-        echo "Found local copy of bedrock-server-1.21.71.01.7z, using it..."
-        
-        # Install 7zip if not available
-        if ! command -v 7z &> /dev/null; then
-            echo "Installing 7zip..."
-            apt-get update && apt-get install -y p7zip-full
-        fi
-        
-        # Copy and extract the 7z file
-        cp /app/bedrock-server-1.21.71.01.7z ./bedrock-server.7z
-        7z x bedrock-server.7z
-        rm bedrock-server.7z
-        download_success=true
-        echo "Local 7z copy extracted successfully!"
     # Check for zip file
-    elif [ -f "/app/bedrock-server-1.21.71.01.zip" ]; then
+    if [ -f "/app/bedrock-server-1.21.71.01.zip" ]; then
         echo "Found local copy of bedrock-server-1.21.71.01.zip, using it..."
         cp /app/bedrock-server-1.21.71.01.zip ./bedrock-server.zip
         download_success=true
@@ -44,11 +28,10 @@ if [ ! -f "$SERVER_DIR/bedrock_server" ]; then
     else
         # Define direct URLs to different versions (most recent first)
         DIRECT_URLS=(
-            "https://www.minecraft.net/bedrockdedicatedserver/bin-linux/bedrock-server-1.21.71.01.zip"
+            "https://minecraft.azureedge.net/bin-linux/bedrock-server-1.21.71.01.zip"
+            "https://dl.dejavucraft.eu/bedrock-server-1.21.71.01.zip"
+            "https://www.mediafire.com/file/p49u0ztqjrz8vz2/bedrock-server-1.21.71.01.zip/file"
             "https://minecraft.azureedge.net/bin-linux/bedrock-server-1.20.62.02.zip"
-            "https://raw.githubusercontent.com/MCBEBackup/MinecraftBedrockServer/main/1.20.62.02.zip"
-            "https://dl.devfee.org/minecraft/server/bedrock-server-1.20.62.02.zip"
-            "https://download.mcbedrock.com/bedrock-server-1.20.62.02.zip"
         )
         
         # Try each URL in sequence
@@ -77,12 +60,10 @@ if [ ! -f "$SERVER_DIR/bedrock_server" ]; then
     fi
     
     if [ "$download_success" = true ]; then
-        # Extract zip file if it exists (7z extraction happens above)
-        if [ -f "./bedrock-server.zip" ]; then
-            echo "Extracting zip server..."
-            unzip -q bedrock-server.zip
-            rm bedrock-server.zip
-        fi
+        # Extract zip file
+        echo "Extracting zip server..."
+        unzip -q bedrock-server.zip
+        rm bedrock-server.zip
         
         # Make sure bedrock_server is executable
         chmod +x bedrock_server
@@ -90,7 +71,7 @@ if [ ! -f "$SERVER_DIR/bedrock_server" ]; then
         echo "Bedrock server extracted to $SERVER_DIR"
         ls -la "$SERVER_DIR"
     else
-        echo "ERROR: All download attempts failed."
+        echo "ERROR: All setup attempts failed."
         echo "Creating a dummy server file for testing..."
         # Create a dummy file so the server thinks it exists
         echo "#!/bin/bash" > bedrock_server
