@@ -1,0 +1,11 @@
+{
+  "name": "Minecraft Bedrock Server",
+  "description": "Minecraft Bedrock Server running on Heroku",
+  "repository": "https://github.com/GeekLuffy/minecraft-server",
+  "stack": "container",
+  "buildpacks": [
+    {
+      "url": "https://github.com/heroku/heroku-buildpack-container"
+    }
+  ]
+} 
