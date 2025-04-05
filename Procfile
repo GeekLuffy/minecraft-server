@@ -1,1 +1,1 @@
-web: /opt/bedrock/bedrock_server 
+web: gunicorn app:app 
