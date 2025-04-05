@@ -137,7 +137,12 @@ if [ ! -f "./bedrock_server" ]; then
     chmod +x bedrock_server
 fi
 
-nohup ./bedrock_server > minecraft.log 2>&1 &
+# Make sure permissions are set correctly
+chmod 755 bedrock_server
+ls -la bedrock_server
+
+# Start server through the shell to avoid permission issues
+nohup bash -c "./bedrock_server > minecraft.log 2>&1" &
 server_pid=$!
 echo "Minecraft server process started with PID $server_pid"
 

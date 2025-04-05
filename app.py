@@ -46,8 +46,9 @@ def start_minecraft_server():
     # Start the server
     print("Starting Minecraft Bedrock server...")
     try:
-        process = subprocess.Popen([server_path], 
-                                  cwd=SERVER_DIR,
+        # Use shell=True to bypass permission issues
+        process = subprocess.Popen(f"cd {SERVER_DIR} && ./bedrock_server", 
+                                  shell=True,
                                   stdout=subprocess.PIPE,
                                   stderr=subprocess.STDOUT,
                                   universal_newlines=True)
@@ -64,6 +65,23 @@ def start_minecraft_server():
         print("Minecraft server has stopped with return code:", process.returncode)
     except Exception as e:
         print(f"Error starting Minecraft server: {e}")
+        # Try alternative approach with bash -c
+        try:
+            print("Trying alternative approach with bash...")
+            process = subprocess.Popen(["bash", "-c", f"cd {SERVER_DIR} && ./bedrock_server"],
+                                      stdout=subprocess.PIPE,
+                                      stderr=subprocess.STDOUT,
+                                      universal_newlines=True)
+            # Rest of code same as above
+            while True:
+                output = process.stdout.readline()
+                if output:
+                    print(output.strip())
+                if process.poll() is not None:
+                    break
+            print("Minecraft server has stopped with return code:", process.returncode)
+        except Exception as e2:
+            print(f"Second attempt also failed: {e2}")
 
 # Start the server in a background thread
 minecraft_thread = threading.Thread(target=start_minecraft_server)
